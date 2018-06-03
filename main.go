@@ -5,53 +5,63 @@ func main() {
 
 	a := make(chan bool)
 	b := make(chan bool)
-	xor1 := make(chan bool)
-
 	c := make(chan bool)
-	sum := make(chan bool)
 
-	go xorGate(a, b, xor1)
-	go xorGate(c, xor1, sum)
+	xor1 := xorGate(a, b)
+	sum := orGate(xor1, c)
 
-	a <- false
-	b <- false
+	a <- true
+	b <- true
+	c <- true
 
-	c <- false
+	println("sum: ", <-sum)
 
-	println("result 2 : ", <-sum)
-
-	close(sum)
 }
 
-func orGate(a, b <-chan bool, r chan<- bool) {
-	for {
-		// Important to read BOTH the values of the channel before proceeding
-		// otherwise the boolean evaluation takes the first one that becomes available.
-		_a := <-a
-		_b := <-b
+func orGate(a, b <-chan bool) <-chan bool {
+	r := make(chan bool)
 
-		r <- (_a || _b)
-	}
+	go func() {
+		for {
+			// Important to read BOTH the values of the channel before proceeding
+			// otherwise the boolean evaluation takes the first one that becomes available.
+			_a := <-a
+			_b := <-b
+
+			r <- (_a || _b)
+		}
+	}()
+
+	return r
 }
 
-func xorGate(a, b <-chan bool, r chan<- bool) {
-	for {
-		// Important to read BOTH the values of the channel before proceeding
-		// otherwise the boolean evaluation takes the first one that becomes available.
-		_a := <-a
-		_b := <-b
+func xorGate(a, b <-chan bool) <-chan bool {
+	r := make(chan bool)
 
-		r <- (_a != _b)
-	}
+	go func() {
+		for {
+			_a := <-a
+			_b := <-b
+
+			r <- (_a != _b)
+		}
+		// close(r)
+	}()
+
+	return r
 }
 
-func andGate(a, b <-chan bool, r chan<- bool) {
-	for {
-		// Important to read BOTH the values of the channel before proceeding
-		// otherwise the boolean evaluation takes the first one that becomes available.
-		_a := <-a
-		_b := <-b
+func andGate(a, b <-chan bool) <-chan bool {
+	r := make(chan bool)
 
-		r <- (_a && _b)
-	}
+	go func() {
+		for {
+			_a := <-a
+			_b := <-b
+
+			r <- (_a && _b)
+		}
+	}()
+
+	return r
 }
