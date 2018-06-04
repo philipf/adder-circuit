@@ -6,16 +6,39 @@ func main() {
 	b := make(chan bool)
 	c := make(chan bool)
 
-	xor1 := xorGate(a, b)
-	sum := xorGate(xor1, c)
-	fo := fanOut(sum, 2)
+	fa := fanOut(a, 2)
+	a0 := fa[0]
+	a1 := fa[1]
 
-	a <- true
-	b <- true
+	fb := fanOut(b, 2)
+	b0 := fb[0]
+	b1 := fb[1]
+
+	fc := fanOut(c, 2)
+	c0 := fc[0]
+	c1 := fc[1]
+
+	xor1 := xorGate(a0, b0)
+
+	fxor1 := fanOut(xor1, 2)
+	xor1_0 := fxor1[0]
+	xor1_1 := fxor1[1]
+
+	xor2 := xorGate(xor1_0, c0)
+	and1 := andGate(a1, b1)
+	and2 := andGate(xor1_1, c1)
+	or1 := orGate(and1, and2)
+
 	c <- true
+	a <- true
+	b <- false
 
-	println("sum1: ", <-fo[0])
-	println("sum2: ", <-fo[1])
+	// println("xor1: ", <-xor1)
+	//println("a1:", <-a1)
+	// println("b1:", <-b1)
+
+	println("carry: ", <-or1)
+	println("sum: ", <-xor2)
 
 }
 
@@ -75,6 +98,7 @@ func fanOut(c <-chan bool, num int) []chan bool {
 
 		for _, o := range outChannels {
 			o <- b
+			close(o)
 		}
 	}()
 
