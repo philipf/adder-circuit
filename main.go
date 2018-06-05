@@ -13,23 +13,12 @@ func testAll() {
 	b := make(chan bool)
 	c := make(chan bool)
 
-	fa := fanOut(a, 2)
-	a0 := fa[0]
-	a1 := fa[1]
-
-	fb := fanOut(b, 2)
-	b0 := fb[0]
-	b1 := fb[1]
-
-	fc := fanOut(c, 2)
-	c0 := fc[0]
-	c1 := fc[1]
+	a0, a1 := split(a)
+	b0, b1 := split(b)
+	c0, c1 := split(c)
 
 	xor1 := xorGate(a0, b0)
-
-	fxor1 := fanOut(xor1, 2)
-	xor1_0 := fxor1[0]
-	xor1_1 := fxor1[1]
+	xor1_0, xor1_1 := split(xor1)
 
 	xor2 := xorGate(xor1_0, c0)
 	and1 := andGate(a1, b1)
@@ -161,4 +150,9 @@ func fanOut(ch <-chan bool, num int) []chan bool {
 	}()
 
 	return cs
+}
+
+func split(ch <-chan bool) (chan bool, chan bool) {
+	r := fanOut(ch, 2)
+	return r[0], r[1]
 }
