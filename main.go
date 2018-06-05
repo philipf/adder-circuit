@@ -1,6 +1,15 @@
 package main
 
+import (
+	"time"
+)
+
 func main() {
+	// testOrGate()
+	testAll()
+}
+
+func testAll() {
 
 	a := make(chan bool)
 	b := make(chan bool)
@@ -29,30 +38,100 @@ func main() {
 	and2 := andGate(xor1_1, c1)
 	or1 := orGate(and1, and2)
 
-	c <- true
+	sum := false
+	carry := false
+
+	go func() {
+		println("ready player 1")
+		for {
+			carry = <-or1
+			println(" > carry: ", carry)
+		}
+	}()
+
+	go func() {
+		println("ready player 2")
+		for {
+			sum = <-xor2
+			println(" > sum: ", sum)
+		}
+	}()
+
 	a <- true
-	b <- false
+	// b <- true
+	// c <- true
 
-	// println("xor1: ", <-xor1)
-	//println("a1:", <-a1)
-	// println("b1:", <-b1)
+	time.Sleep(200 * time.Millisecond)
+	println("\n-- Result --")
+	println("sum  : ", sum)
+	println("carry:", carry)
+}
 
-	println("carry: ", <-or1)
-	println("sum: ", <-xor2)
+func testOrGate() {
+	a := make(chan bool)
+	b := make(chan bool)
+	// andGate := make(chan bool)
+
+	fb := fanOut(b, 2)
+	b0 := fb[0]
+	b1 := fb[1]
+
+	orGate1 := orGate(a, b0)
+	andGate1 := andGate(orGate1, b1)
+	//	andGate2 := andGate(andGate1, b)
+
+	// go changeInput(a, b)
+	a <- true
+	b <- true
+
+	go func() {
+		for {
+			result := <-andGate1
+			println(result)
+		}
+	}()
+
+	time.Sleep(5000 * time.Millisecond)
+
+	println("done!!!")
+
+}
+
+func changeInput(a chan bool, b chan bool) {
+	for {
+		a <- false
+		//b <- false
+		time.Sleep(2 * time.Millisecond)
+		println("--1---")
+
+		a <- true
+		//b <- false
+		time.Sleep(2 * time.Millisecond)
+		println("--2--")
+	}
 
 }
 
 func orGate(a, b <-chan bool) <-chan bool {
 	r := make(chan bool)
 
-	go func() {
-		// Important to read BOTH the values of the channel before proceeding
-		// otherwise the boolean evaluation takes the first one that becomes available.
-		_a := <-a
-		_b := <-b
+	_a := false
+	_b := false
 
-		r <- (_a || _b)
-		close(r)
+	go func() {
+		for {
+			_a = <-a
+			println("orGate (a)")
+			r <- (_a || _b)
+		}
+	}()
+
+	go func() {
+		for {
+			_b = <-b
+			println("orGate (b)")
+			r <- (_a || _b)
+		}
 	}()
 
 	return r
@@ -61,12 +140,23 @@ func orGate(a, b <-chan bool) <-chan bool {
 func xorGate(a, b <-chan bool) <-chan bool {
 	r := make(chan bool)
 
-	go func() {
-		_a := <-a
-		_b := <-b
+	_a := false
+	_b := false
 
-		r <- (_a != _b)
-		close(r)
+	go func() {
+		for {
+			_a = <-a
+			println("xorGate (a)")
+			r <- (_a != _b)
+		}
+	}()
+
+	go func() {
+		for {
+			_b = <-b
+			println("xorGate (b)")
+			r <- (_a != _b)
+		}
 	}()
 
 	return r
@@ -75,32 +165,47 @@ func xorGate(a, b <-chan bool) <-chan bool {
 func andGate(a, b <-chan bool) <-chan bool {
 	r := make(chan bool)
 
-	go func() {
-		_a := <-a
-		_b := <-b
+	_a := false
+	_b := false
 
-		r <- (_a && _b)
-		close(r)
+	go func() {
+		for {
+			_a = <-a
+			println("andGate (a)")
+			r <- (_a && _b)
+		}
+	}()
+
+	go func() {
+		for {
+			_b = <-b
+			println("andGate (b)")
+			r <- (_a && _b)
+		}
 	}()
 
 	return r
 }
 
-func fanOut(c <-chan bool, num int) []chan bool {
-	outChannels := make([]chan bool, num)
+// https://stackoverflow.com/questions/16930251/go-one-producer-many-consumers
+func fanOut(ch <-chan bool, num int) []chan bool {
+	cs := make([]chan bool, num)
 
-	for i := range outChannels {
-		outChannels[i] = make(chan bool)
+	for i := range cs {
+		cs[i] = make(chan bool)
 	}
 
 	go func() {
-		b := <-c
-
-		for _, o := range outChannels {
-			o <- b
-			close(o)
+		for i := range ch {
+			for _, c := range cs {
+				c <- i
+			}
+		}
+		for _, c := range cs {
+			// close all our fanOut channels when the input channel is exhausted.
+			close(c)
 		}
 	}()
 
-	return outChannels
+	return cs
 }
