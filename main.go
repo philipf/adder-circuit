@@ -5,12 +5,10 @@ import (
 )
 
 func main() {
-	// testOrGate()
 	testAll()
 }
 
 func testAll() {
-
 	a := make(chan bool)
 	b := make(chan bool)
 	c := make(chan bool)
@@ -57,59 +55,14 @@ func testAll() {
 		}
 	}()
 
-	a <- true
-	// b <- true
-	// c <- true
-
-	time.Sleep(200 * time.Millisecond)
-	println("\n-- Result --")
-	println("sum  : ", sum)
-	println("carry:", carry)
-}
-
-func testOrGate() {
-	a := make(chan bool)
-	b := make(chan bool)
-	// andGate := make(chan bool)
-
-	fb := fanOut(b, 2)
-	b0 := fb[0]
-	b1 := fb[1]
-
-	orGate1 := orGate(a, b0)
-	andGate1 := andGate(orGate1, b1)
-	//	andGate2 := andGate(andGate1, b)
-
-	// go changeInput(a, b)
+	c <- true
 	a <- true
 	b <- true
 
-	go func() {
-		for {
-			result := <-andGate1
-			println(result)
-		}
-	}()
-
-	time.Sleep(5000 * time.Millisecond)
-
-	println("done!!!")
-
-}
-
-func changeInput(a chan bool, b chan bool) {
-	for {
-		a <- false
-		//b <- false
-		time.Sleep(2 * time.Millisecond)
-		println("--1---")
-
-		a <- true
-		//b <- false
-		time.Sleep(2 * time.Millisecond)
-		println("--2--")
-	}
-
+	time.Sleep(200 * time.Millisecond)
+	println("\n-- Result --")
+	println("sum  :", sum)
+	println("carry:", carry)
 }
 
 func orGate(a, b <-chan bool) <-chan bool {
