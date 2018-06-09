@@ -11,7 +11,6 @@ func XorGate(a, b <-chan bool) <-chan bool {
 	go func() {
 		for {
 			_a = <-a
-			println("xorGate (a): ", _a, _b)
 			r <- (_a != _b)
 		}
 	}()
@@ -19,7 +18,6 @@ func XorGate(a, b <-chan bool) <-chan bool {
 	go func() {
 		for {
 			_b = <-b
-			println("xorGate (b): ", _a, _b)
 			r <- (_a != _b)
 		}
 	}()

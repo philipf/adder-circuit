@@ -6,7 +6,7 @@ func FanOut(ch <-chan bool, num int) []chan bool {
 	cs := make([]chan bool, num)
 
 	for i := range cs {
-		cs[i] = make(chan bool)
+		cs[i] = make(chan bool, 1)
 	}
 
 	go func() {
@@ -26,7 +26,7 @@ func FanOut(ch <-chan bool, num int) []chan bool {
 }
 
 // Split one channel into two
-func Split(ch <-chan bool) (chan bool, chan bool) {
+func Split(ch <-chan bool) (<-chan bool, <-chan bool) {
 	r := FanOut(ch, 2)
 	return r[0], r[1]
 }

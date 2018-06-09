@@ -11,7 +11,6 @@ func OrGate(a, b <-chan bool) <-chan bool {
 	go func() {
 		for {
 			_a = <-a
-			println("orGate (a)")
 			r <- (_a || _b)
 		}
 	}()
@@ -19,7 +18,6 @@ func OrGate(a, b <-chan bool) <-chan bool {
 	go func() {
 		for {
 			_b = <-b
-			println("orGate (b)")
 			r <- (_a || _b)
 		}
 	}()

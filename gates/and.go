@@ -11,7 +11,6 @@ func AndGate(a, b <-chan bool) <-chan bool {
 	go func() {
 		for {
 			_a = <-a
-			println("andGate (a)")
 			r <- (_a && _b)
 		}
 	}()
@@ -19,7 +18,6 @@ func AndGate(a, b <-chan bool) <-chan bool {
 	go func() {
 		for {
 			_b = <-b
-			println("andGate (b)")
 			r <- (_a && _b)
 		}
 	}()
