@@ -15,6 +15,7 @@ func FanOut(ch <-chan bool, num int) []chan bool {
 				c <- i
 			}
 		}
+
 		for _, c := range cs {
 			// close all our fanOut channels when the input channel is exhausted.
 			close(c)
